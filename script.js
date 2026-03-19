@@ -43,3 +43,153 @@ function createDrop() {
     drop.remove(); // Clean up drops that weren't caught
   });
 }
+
+
+let score = 0;
+let timeLeft = 30;
+let gameInterval;
+let dropInterval;
+let gameActive = false;
+
+const scoreEl = document.getElementById("score");
+const timeEl = document.getElementById("time");
+const gameContainer = document.getElementById("game-container");
+const startBtn = document.getElementById("start-btn");
+const resetBtn = document.getElementById("reset-btn");
+const messageEl = document.getElementById("game-message");
+const confettiContainer = document.getElementById("confetti-container");
+
+// START GAME
+startBtn.addEventListener("click", startGame);
+resetBtn.addEventListener("click", resetGame);
+
+function startGame() {
+    if (gameActive) return;
+
+    gameActive = true;
+    messageEl.textContent = "";
+    score = 0;
+    timeLeft = 30;
+    updateUI();
+
+    gameInterval = setInterval(updateTimer, 1000);
+    dropInterval = setInterval(createDrop, 800);
+}
+
+// TIMER
+function updateTimer() {
+    timeLeft--;
+    timeEl.textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+        endGame();
+    }
+}
+
+// CREATE DROPS
+function createDrop() {
+    if (!gameActive) return;
+
+    const drop = document.createElement("div");
+    drop.classList.add("water-drop");
+
+    // Random bad drop
+    if (Math.random() < 0.3) {
+        drop.classList.add("bad-drop");
+    }
+
+    // Random horizontal position
+    drop.style.left = Math.random() * 740 + "px";
+
+    // Random fall speed
+    drop.style.animationDuration = (Math.random() * 2 + 2) + "s";
+
+    // CLICK EVENT
+    drop.addEventListener("click", () => {
+        if (!gameActive) return;
+
+        if (drop.classList.contains("bad-drop")) {
+            score--;
+        } else {
+            score++;
+        }
+
+        updateUI();
+        drop.remove();
+
+        checkWin();
+    });
+
+    gameContainer.appendChild(drop);
+
+    // Remove after falling
+    setTimeout(() => {
+        drop.remove();
+    }, 4000);
+}
+
+// UPDATE UI
+function updateUI() {
+    scoreEl.textContent = score;
+}
+
+// END GAME
+function endGame() {
+    gameActive = false;
+    clearInterval(gameInterval);
+    clearInterval(dropInterval);
+
+    messageEl.textContent = "Game Over! Final Score: " + score;
+}
+
+// RESET GAME
+function resetGame() {
+    gameActive = false;
+    clearInterval(gameInterval);
+    clearInterval(dropInterval);
+
+    score = 0;
+    timeLeft = 30;
+    updateUI();
+    timeEl.textContent = timeLeft;
+
+    messageEl.textContent = "";
+
+    // Remove all drops
+    gameContainer.innerHTML = "";
+
+    // Remove confetti
+    confettiContainer.innerHTML = "";
+}
+
+// WIN CONDITION + CONFETTI
+function checkWin() {
+    if (score >= 20) {
+        messageEl.textContent = "You Win! 🎉";
+        createConfetti();
+        endGame();
+    }
+}
+
+// CONFETTI FUNCTION
+function createConfetti() {
+    for (let i = 0; i < 50; i++) {
+        const confetti = document.createElement("div");
+        confetti.classList.add("confetti");
+
+        confetti.style.left = Math.random() * 100 + "%";
+        confetti.style.backgroundColor = getRandomColor();
+
+        confettiContainer.appendChild(confetti);
+
+        setTimeout(() => {
+            confetti.remove();
+        }, 2000);
+    }
+}
+
+// RANDOM COLORS
+function getRandomColor() {
+    const colors = ["#FFC907", "#2E9DF7", "#4FCB53", "#FF902A"];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
